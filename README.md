@@ -11,13 +11,13 @@
 
 We used DistilBERT [1] as our base model. The choice of a BERT derived model is motivated by the fact that they are open-source, pre-trained in a large corpus, and have a reasonable size. In particular, DistilBERT is a smaller, lighter version of BERT trained by distillation of the original model, that is, trained to predict the same probabilities and similar hidden states. As we don't have access to a lot of training data, a smaller model is less prone to overfitting.
 
-We pass as input to DistilBERT the original sentence from the dataset, followed by the following string:
+We pass as input to DistilBERT the original sentence from the dataset, followed by the subsequent string:
 
 ```
 ambiance[SEP]prices of drink[SEP]quality of drink[SEP]style options of drink[SEP]price of food[SEP]quality of food[SEP]style options of food[SEP]location of[SEP]restaurant[SEP]restaurant[SEP]price of restaurante[SEP]service
 ```
 
-It represents each of the 12 categories separated by `[SEP]` tokens. For example, consider the following row from the dev set:
+It represents each of the 12 categories separated by separator tokens. For example, consider the following row from the dev set:
 
 - Sentence: Great wine selection, Gigondas is worth the price, and the house champagne is a great value.
 - Category: DRINKS#PRICES
@@ -30,9 +30,9 @@ The input to the model will be the tokenized version of
 [CLS] Great wine selection, Gigondas is worth the price, and the house champagne is a great value. [SEP] ambiance[SEP]prices of drink[SEP]quality of drink[SEP]style options of drink[SEP]price of food[SEP]quality of food[SEP]style options of food[SEP]location of[SEP]restaurant[SEP]restaurant[SEP]price of restaurante[SEP]service
 ```
 
-where `[CLS]` is the classification token that marks the beggining of the input and `[SEP]` is the separator between two sentences. This approach is motivated by the encoder part of paper [2].
+This approach is motivated by the encoder part of paper [2].
 
-The DistilBERT model outputs one 786 vector per token, providing a word-level understanding. We concatenate the following two vectors: 
+DistilBERT outputs one 786-dimensional vector per token, providing a word-level understanding. We concatenate the following two vectors: 
 
 1. The representation of the `[SEP]` token that comes just before the category of interest
 2. The representation of the target token.
