@@ -156,10 +156,10 @@ class Classifier:
          OF MODEL HYPERPARAMETERS
         """
         # Hyperparameters
-        lr = 1.2e-5
+        lr = 5e-5
         batch_size = 64
         weight_decay_factor = 0.048
-        epochs = 5
+        epochs = 15
 
         df = get_dataframe(train_filename)
         train_dataloader = self.get_dataloader(df, shuffle=True, batch_size=batch_size)
