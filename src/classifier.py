@@ -106,8 +106,10 @@ class ABSADistilBert(torch.nn.Module):
           out_cat = torch.cat([out_target, out_cat], dim=1)
           out_cat = self.models[cat][0](out_cat)
           out_cat = self.relu(out_cat)
+          out_cat = self.dropout(out_cat)
           out_cat = self.models[cat][1](out_cat)
           out_cat = self.relu(out_cat)
+          out_cat = self.dropout(out_cat)
           out_cat = self.models[cat][2](out_cat)
           full_out[:, cat, :] = out_cat
 
@@ -128,7 +130,7 @@ class Classifier:
         
         """
         self.tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
-        self.model = ABSADistilBert(dropout_rate=0.1, 
+        self.model = ABSADistilBert(dropout_rate=0.2, 
                                     sep_token_id=self.tokenizer.sep_token_id, 
                                     weights=None,
                                     n_categories=len(CATEGORY_MAP))
