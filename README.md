@@ -2,7 +2,7 @@
 
 ## Students
 
-- Alexandre Maranhão
+- Alexandre Maranhão da Rocha
 - Arthur Gallois
 
 ## Description
