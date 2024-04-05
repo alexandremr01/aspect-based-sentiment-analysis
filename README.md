@@ -3,7 +3,7 @@
 ## Students
 
 - Alexandre Maranhão
-- Artur Gallois
+- Arthur Gallois
 
 ## Description
 
