@@ -100,7 +100,7 @@ class ABSADistilBert(torch.nn.Module):
 
         out_target = bert_out['last_hidden_state'][range(batch_size), target_ids, :]
         out_target = self.dropout(out_target)
-        full_out = torch.zeros((batch_size, self.n_categories, 3)).cuda()
+        full_out = torch.zeros((batch_size, self.n_categories, 3)).to(ids.device)
         for cat in range(self.n_categories):
           out_cat = out[:, cat, :]
           out_cat = torch.cat([out_target, out_cat], dim=1)
@@ -161,7 +161,7 @@ class Classifier:
         lr = 5e-5
         batch_size = 64
         weight_decay_factor = 0.048
-        epochs = 15
+        epochs = 10
 
         df = get_dataframe(train_filename)
         train_dataloader = self.get_dataloader(df, shuffle=True, batch_size=batch_size)

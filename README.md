@@ -9,15 +9,15 @@
 
 ![Model Architecture](architecture.png)
 
-We used DistilBERT [1] as our base model. The choice of a BERT derived model is motivated by the fact that they are open-source, pre-trained in a large corpus, and have a reasonable size. In particular, DistilBERT is a smaller, lighter version of BERT trained by distillation of the original model, that is, trained to predict the same probabilities and similar hidden states. As we don't have access to a lot of training data, a smaller model is less prone to overfitting.
+We used DistilBERT [1] as our base model. The choice of a BERT derived model is motivated by the fact that they are open-source, pre-trained in a large corpus, and have a reasonable size. In particular, DistilBERT is a smaller, lighter version of BERT trained by distillation of the original model, that is, trained to predict the same probabilities and similar hidden states. As we don't have access to a lot of training data, a smaller model is convenient since it is less prone to overfitting.
 
-We pass as input to DistilBERT the original sentence from the dataset, followed by the subsequent string:
+The input to DistilBERT is the original sentence from the dataset followed by the subsequent string:
 
 ```
 ambiance[SEP]prices of drink[SEP]quality of drink[SEP]style options of drink[SEP]price of food[SEP]quality of food[SEP]style options of food[SEP]location of[SEP]restaurant[SEP]restaurant[SEP]price of restaurante[SEP]service
 ```
 
-It represents each of the 12 categories separated by separator tokens. For example, consider the following row from the dev set:
+It represents each of the 12 categories with separator tokens in between. For example, consider the following row from the dev set:
 
 - Sentence: Great wine selection, Gigondas is worth the price, and the house champagne is a great value.
 - Category: DRINKS#PRICES
@@ -37,20 +37,24 @@ DistilBERT outputs one 786-dimensional vector per token, providing a word-level 
 1. The representation of the `[SEP]` token that comes just before the category of interest
 2. The representation of the target token.
 
-In the previous example, the dataset tells that the target begins at character 22. We can use the `char_to_token` HuggingFace function to map this to a token index, for example to token number 6. So we take from the DistilBERT output the vectors associated to token number 6 and to the second `[SEP]`, that comes just before "prices of drink", and we concatenate them. Note that this approach also allows to disambiguate a same target that appears twice in a sentence, possibly in different contexts, since we use the DistilBERT output for the desired position.
+In the previous example, the dataset tells that the target begins at character 22. We can use the HuggingFace tokenizer's function `char_to_token` to map this to a token index, for example to token number 6. So we concatenate the vectors from the DistilBERT associated to the second `[SEP]`, that comes just before "prices of drink", and to the token number 6. 
 
-The concatenated vector is then passed through a category-specific MLP $f_{category}$ with two hidden layers and an output layer. We used layers with sizes 256, 32, 3, and ReLU activations. Note that we have 12 different MLPs, with different parameters, one for each category, that act in parallel, without any shared parameter or influence in one another.
+Note that this approach also allows to disambiguate if the same target appears twice in a sentence, possibly in different contexts, since we use the DistilBERT output for the desired position.
 
-In addition to the described layers, we used Dropout layers with probability 0.2 in order to avoid overfitting. They are placed after the DistilBERT and after each ReLU in the MLPs. We omitted from the representation for the sake of clarity.
+The concatenated vector is then passed through a group of 12 independent Multi-Layer Perceptrons (MLPs), one per category. All of them have ReLU activations, two hidden layers of sizes 256 and 32, and one output layer of size 3. The result is the probabilities per polarity (neutral, positive or negative) for each category, and then we can take the category of interest for each sample in the batch.
+
+In addition to the described layers, we used Dropout layers with probability 20% in order to avoid overfitting. They are placed after the DistilBERT and after each ReLU in the MLPs. We omitted from the representation for the sake of clarity.
 
 The whole model, including the pre-trained weights, is optimized with AdamW. Weight decay is a term in optimizer algorithms such as SGD and Adam that exponentially decreases the weights in order to regularize them - in the case of SGD, it is equivalent to L2 regularization. AdamW [3] is a version of Adam that decouples weight decay from the optimization steps with respect to the loss function, and ultimately improves Adam's ability to generalize. The authors suggest using as weight decay a hyperparameter called normalized weight decay multiplied by the square root of the ratio between the batch size b and the product between number of training samples B and number of epochs T ([3], Appendix B.1), that is,
 $$ \lambda = \lambda_{norm} \sqrt{\frac{b}{BT}}$$
 
-We ran training for 15 epochs with AdamW. The optimization process uses learning rate 5e-5, batch size 64, and normalized weight decay 0.048. In addition, we use the dev f1 score to select the best model seen during training, in order to avoid overfitting to the training set.
+We ran training for 10 epochs with AdamW. The optimization process uses learning rate 5e-5, batch size 64, and normalized weight decay 0.048. In addition, we use the dev f1 score to select the best model seen during training, in order to avoid overfitting to the training set.
+
+With our model, we aim to use all the provided information, up to the target position in the string, in order to do Aspect-Based Sentence Classification. At the same time, we aim to reduce the risk overfitting, that is a concern due to the limited size of the dataset. 
 
 ## Results
 
-On the dev set, we got an average accuracy of 85.64% over 5 runs.
+On the dev set, we got an average accuracy of 85.37% over 5 runs.
 
 ## References 
 
